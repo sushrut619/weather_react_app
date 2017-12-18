@@ -162,7 +162,9 @@ class App extends Component {
                 <img src="images/logo.png" alt="" className="logo" />
                 <div className="logo-type">
                   <h1 className="site-title">Weather Co</h1>
-                  <small className="site-description">This website gives you weekly forecast</small>
+                  <small className="site-description">
+                    <a href="https://darksky.net/poweredby/">Powered by Dark Sky</a>
+                  </small>
                 </div>
               </a>
 
