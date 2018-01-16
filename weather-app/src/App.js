@@ -16,6 +16,7 @@ class APIRequest{
         .get('/weather')
         .query({latitude: coordinates.latitude})
         .query({longitude: coordinates.longitude})
+        .query({address: coordinates.address})
         .set('Accept', 'application/json')
         .set('Access-Control-Allow-Origin', '*')
         .end(function(err, res) {
@@ -30,17 +31,20 @@ class App extends Component {
     this.state = {
       current_temp: "0",
       date: "0",
+      address: "",
       latitude: "0",
       longitude: "0",
       weekData: Array(7).fill(tempData),
       min_temps: Array(7).fill("0"),
       max_temps: Array(7).fill("0"),
+      units: "",
       windSpeed: "0",
       precipitation: "0"
     };
     this.DayForecast = this.DayForecast.bind(this);
     this.apiResponseCallback = this.apiResponseCallback.bind(this);
     this.getWeatherData = this.getWeatherData.bind(this);
+    this.setAddress = this.setAddress.bind(this);
     this.setLatitude = this.setLatitude.bind(this);
     this.setLongitude = this.setLongitude.bind(this);
     this.validateCoordinates = this.validateCoordinates.bind(this);
@@ -85,7 +89,7 @@ class App extends Component {
         <div className="forecast-icon">
           <img src="images/icons/icon-3.svg" alt="" width="48" />
         </div>
-        <div className="degree">{parseInt(this.state.max_temps[dayNo], 10)}<sup>o</sup>C</div>
+        <div className="degree">{parseInt(this.state.max_temps[dayNo], 10)}<sup>o</sup>{this.state.units}</div>
         <small>{parseInt(this.state.min_temps[dayNo], 10)}<sup>o</sup></small>
       </div>
     </div>;
@@ -95,26 +99,18 @@ class App extends Component {
     var response_data = res.body;
     console.log("response received: ", JSON.stringify(response_data, null));
     console.log("error: ", err);
+    if (this.state.language == "English" || this.state.language == "english") {
+      this.convertToFahrenheit();
+    }
     if ("min_temps" in response_data && "max_temps" in response_data && "wind_speeds" in response_data) {
       this.setState({
         current_temp: response_data.current_temp,
         min_temps : response_data.min_temps,
         max_temps : response_data.max_temps,
+        units: response_data.units,
         windSpeed : response_data.wind_speeds[1]
       });
     }
-  }
-
-  setMondayDate(){
-    var d = new Date();
-    var day = d.getDay(),
-    // diff = d.getDate() - day + (day == 0 ? -6:1); // adjust when day is sunday
-    diff = d.getDate() - day + 1; // adjust when day is sunday
-    var monday = new Date(d.setDate(diff));
-    this.setState({
-      date: monday.toString()
-    })
-    return monday.toString();
   }
 
   getWeatherData(){
@@ -124,10 +120,17 @@ class App extends Component {
       console.log("valid coordinates received");
       var req_data = {
         latitude: this.state.latitude,
-        longitude: this.state.longitude
+        longitude: this.state.longitude,
+        address: this.state.address
       };
       APIRequest.get(req_data, this.apiResponseCallback);
     }
+  }
+
+  setAddress(event) {
+    this.setState({
+      address: event.target.value
+    });
   }
 
   setLatitude(event){
@@ -140,6 +143,18 @@ class App extends Component {
     this.setState({
       longitude: event.target.value
     });
+  }
+
+  setMondayDate(){
+    var d = new Date();
+    var day = d.getDay(),
+    // diff = d.getDate() - day + (day == 0 ? -6:1); // adjust when day is sunday
+    diff = d.getDate() - day + 1; // adjust when day is sunday
+    var monday = new Date(d.setDate(diff));
+    this.setState({
+      date: monday.toString()
+    })
+    return monday.toString();
   }
 
   validateCoordinates(coordinates){
@@ -182,13 +197,13 @@ class App extends Component {
                 <div className="row">
                   <div className="col-md-6"><input type="text" placeholder="Latitude..." onChange={this.setLatitude} /></div>
                   <div className="col-md-6"><input type="text" placeholder="Longitude..." onChange={this.setLongitude} /></div>
+                  <div className="col-md-6"><input type="text" placeholder="Address..." onChange={this.setAddress} /></div>
                   <div className="text-right"><input type="submit" placeholder="Submit" onClick={this.getWeatherData} /></div>
                 </div>
               </form>
             </div>
           </div>
         </div>
-
 
         <div className="forecast-table">
           <div className="container">
@@ -200,7 +215,7 @@ class App extends Component {
                 <div className="forecast-content">
                   <div className="location">{this.state.latitude},{this.state.longitude}</div>
                   <div className="degree">
-                    <div className="num">{parseInt(this.state.current_temp, 10)}<sup>o</sup>C</div>
+                    <div className="num">{parseInt(this.state.current_temp, 10)}<sup>o</sup>{this.state.units}</div>
                     <div className="forecast-icon">
                       <img src="images/icons/icon-1.svg" alt="" width="90" />
                     </div>
